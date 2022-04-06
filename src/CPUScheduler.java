@@ -19,7 +19,10 @@ public class CPUScheduler {
             job.setTimeWaiting(job.getTimeWaiting() + 1);         // Increment this job's timeWaiting by 1.
             if(job.getTimeWaiting() > job.getMaxWaitingTime()) {  // If the job's waiting time has exceeded its
                                                                   // max waiting time...
-                job.setPriority(job.getPriority() - 1);           // Increment this job's priority by 1.
+                if (job.getPriority() > -20) {
+                    job.setPriority(job.getPriority() - 1);           // Increment this job's priority by 1.
+                }
+
                 job.setTimeWaiting(0);                            // Reset the time waiting for this job to 0.
             }
             processedJobs.insert(jobPriority, job);               // Insert this job as the value of an entry
@@ -66,7 +69,7 @@ public class CPUScheduler {
         return new Job(Integer.parseInt(instructionArray[instructionArray.length - 1]), 
                        Integer.parseInt(instructionArray[instructionArray.length - 4]),
                        0,
-                       2,
+                       0,
                        name);
     }
 
@@ -76,10 +79,23 @@ public class CPUScheduler {
      * @return boolean
      */
     public static boolean isInstructionMalformed(String[] instructionArray) {
-        if (instructionArray[0].equals("no")) {
+        int arrayLength = instructionArray.length;
+        try {
+            int jobLength = Integer.parseInt(instructionArray[arrayLength - 4]);
+            int jobPriority = Integer.parseInt(instructionArray[arrayLength - 1]);
+            if (!instructionArray[0].equals("add") || 
+                !instructionArray[1].equals("job") ||
+                !instructionArray[arrayLength - 6].equals("with") ||
+                !instructionArray[arrayLength - 5].equals("length") ||
+                (jobLength < 1 || jobLength > 100) ||
+                (jobPriority < -20 || jobPriority > 19) ||
+                !instructionArray[arrayLength - 3].equals("and") ||
+                !instructionArray[arrayLength - 2].equals("priority")) {
+                return true;
+            }
+        } catch (Exception e) {
             return true;
         }
-
         return false;
     }
 }
