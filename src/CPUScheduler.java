@@ -1,25 +1,62 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
 import net.datastructures.HeapPriorityQueue;
 import net.datastructures.PriorityQueue;
 
 public class CPUScheduler {
+    static PriorityQueue<Integer, Job> jobQueue = new HeapPriorityQueue<>(); // Queue of jobs to be scheduled.
+    static String filename;
+    static int maxWaitingTime = 0;
+
+    public CPUScheduler(String filename, int maxWaitingTime) {
+        CPUScheduler.maxWaitingTime = maxWaitingTime;
+        CPUScheduler.filename = filename;
+        processInstructions();
+    }
+
+    public static void processInstructions() {
+        Scanner input = null;
+        try {
+            input = new Scanner(new File(filename));     // Initialize Scanner to read from a file.
+            while (!jobQueue.isEmpty() || input.hasNextLine()) {                // While there is another line to be read in...
+                if (input.hasNextLine()) {
+                    String[] instructionArray = input.nextLine().split(" ");
+
+                    if (!isInstructionMalformed(instructionArray)) { // If the instruction is not malformed...
+                        Job job = createProcess(instructionArray);   // Create a new job out of the instruction.
+                        jobQueue.insert(job.getPriority(), job);         // Add this job to the jobQueue,
+                                                                         // with said job's priority as the key and
+                                                                         // the job itself as the value.
+                    }
+                }
+                jobQueue = executeTimeSlice();
+            }
+        } catch (FileNotFoundException e) {                 // If the filename is invalid...
+            System.out.printf("Exception: FileNotFound\n"); // Print an exception notice to the user.
+        } finally {
+            input.close(); // Close Scanner.
+        }
+    }
+    
     /** 
      * Executes one time slice for the job with the highest priority in the queue at the time.
-     * @param jobsNotYetProcessed A queue of the jobs needing to be processed.
      * @return PriorityQueue<Integer, Job> A queue of the jobs yet to be processed/need more time to process.
      */
-    public static PriorityQueue<Integer, Job> executeTimeSlice(PriorityQueue<Integer, Job> jobsNotYetProcessed) {
-        Job currentJob = jobsNotYetProcessed.removeMin().getValue(); // Remove the highest priority job
+    public static PriorityQueue<Integer, Job> executeTimeSlice() {
+        Job currentJob = jobQueue.removeMin().getValue(); // Remove the highest priority job
                                                                      // in the queue from said queue and
                                                                      // set "job" to that entry's value.    
         PriorityQueue<Integer, Job> processedJobs = new HeapPriorityQueue<>();
-        while(!jobsNotYetProcessed.isEmpty()) {                   // While there are jobs yet to be processed
+        while(!jobQueue.isEmpty()) {                   // While there are jobs yet to be processed
                                                                   // (other than currentJob, of course)...
-            int jobPriority = jobsNotYetProcessed.min().getKey(); // Get the priority of this job.
-            Job job = jobsNotYetProcessed.removeMin().getValue(); // Get the value of this entry (aka the job itself).
+            int jobPriority = jobQueue.min().getKey(); // Get the priority of this job.
+            Job job = jobQueue.removeMin().getValue(); // Get the value of this entry (aka the job itself).
             job.setTimeWaiting(job.getTimeWaiting() + 1);         // Increment this job's timeWaiting by 1.
-            if(job.getTimeWaiting() > job.getMaxWaitingTime()) {  // If the job's waiting time has exceeded its
+            if(job.getTimeWaiting() > maxWaitingTime) {  // If the job's waiting time has exceeded its
                                                                   // max waiting time...
-                if (job.getPriority() > -20) {
+                if (job.getPriority() > -20) {                        // If this job's priority is greater than -20...
                     job.setPriority(job.getPriority() - 1);           // Increment this job's priority by 1.
                 }
 
@@ -69,7 +106,6 @@ public class CPUScheduler {
         return new Job(Integer.parseInt(instructionArray[instructionArray.length - 1]), 
                        Integer.parseInt(instructionArray[instructionArray.length - 4]),
                        0,
-                       0,
                        name);
     }
 
@@ -80,6 +116,7 @@ public class CPUScheduler {
      */
     public static boolean isInstructionMalformed(String[] instructionArray) {
         int arrayLength = instructionArray.length;
+
         try {
             int jobLength = Integer.parseInt(instructionArray[arrayLength - 4]);
             int jobPriority = Integer.parseInt(instructionArray[arrayLength - 1]);
@@ -93,9 +130,10 @@ public class CPUScheduler {
                 !instructionArray[arrayLength - 2].equals("priority")) {
                 return true;
             }
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return true;
         }
+
         return false;
     }
 }
