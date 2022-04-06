@@ -2,14 +2,16 @@ public class Job {
     private int priority = 0,
                 length = 1,
                 timeWaiting = 0,
-                timeRemaining = length;
+                timeRemaining = length,
+                maxWaitingTime = 0;
     private String name = "";
 
-    public Job(int priority, int length, int timeWaiting, String name) {
+    public Job(int priority, int length, int timeWaiting, int maxWaitingTime, String name) {
         this.priority = priority;
         this.length = length;
         this.timeWaiting = timeWaiting;
         this.name = name;
+        this.maxWaitingTime = maxWaitingTime;
         this.timeRemaining = length;
     }
     
@@ -75,6 +77,14 @@ public class Job {
      */
     public void setTimeRemaining(int timeRemaining) {
         this.timeRemaining = timeRemaining;
+    }
+
+    public int getMaxWaitingTime() {
+        return maxWaitingTime;
+    }
+
+    public void setMaxWaitingTime(int maxWaitingTime) {
+        this.maxWaitingTime = maxWaitingTime;
     }
     
     /** 

@@ -17,6 +17,11 @@ public class CPUScheduler {
             int jobPriority = jobsNotYetProcessed.min().getKey(); // Get the priority of this job.
             Job job = jobsNotYetProcessed.removeMin().getValue(); // Get the value of this entry (aka the job itself).
             job.setTimeWaiting(job.getTimeWaiting() + 1);         // Increment this job's timeWaiting by 1.
+            if(job.getTimeWaiting() > job.getMaxWaitingTime()) {  // If the job's waiting time has exceeded its
+                                                                  // max waiting time...
+                job.setPriority(job.getPriority() - 1);           // Increment this job's priority by 1.
+                job.setTimeWaiting(0);                            // Reset the time waiting for this job to 0.
+            }
             processedJobs.insert(jobPriority, job);               // Insert this job as the value of an entry
                                                                   // in processedJobs, with this job's priority
                                                                   // being the key.
@@ -26,7 +31,7 @@ public class CPUScheduler {
 
         displayTimeSlice(currentJob);
 
-        if (currentJob.getTimeRemaining() < currentJob.getLength()) {   // If there is more yet to do with currentJob...
+        if (currentJob.getTimeRemaining() > 0) {   // If there is more yet to do with currentJob...
             processedJobs.insert(currentJob.getPriority(), currentJob); // Insert this job into processedJob,
                                                                         // with currentJob's priority being the key.
         }
@@ -51,8 +56,18 @@ public class CPUScheduler {
      * @param instruction
      * @return Job
      */
-    public static Job createProcess(String instruction) {
-        return null;
+    public static Job createProcess(String[] instructionArray) {
+        String name = instructionArray[2];
+
+        for (int i = 3; i < instructionArray.length - 6; i++) {
+            name = name.concat(" " + instructionArray[i]);
+        }
+
+        return new Job(Integer.parseInt(instructionArray[instructionArray.length - 1]), 
+                       Integer.parseInt(instructionArray[instructionArray.length - 4]),
+                       0,
+                       2,
+                       name);
     }
 
     
@@ -60,7 +75,11 @@ public class CPUScheduler {
      * @param instruction
      * @return boolean
      */
-    public static boolean isInstructionMalformed(String instruction) {
+    public static boolean isInstructionMalformed(String[] instructionArray) {
+        if (instructionArray[0].equals("no")) {
+            return true;
+        }
+
         return false;
     }
 }
